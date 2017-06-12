@@ -215,53 +215,43 @@ sub ds_data {
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
 			my $map_to  = $org_server . "/";
+			my $re = $host_re;
+			my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
 			if ( $host_re =~ /\.\*$/ ) {
-				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
-				my $portstr = "";
-				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
-					$portstr = ":" . $server->tcp_port;
-				}
-				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
-				if ( $protocol == 0 ) {
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
-					$map_from = "https://" . $hname . $re . $ds_domain . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-				}
-				elsif ( $protocol == 2 ) {
-
-					#add the first one with http
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-
-					#add the second one for https
-					my $map_from2 = "https://" . $hname . $re . $ds_domain . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
-				}
+				$re .= $ds_domain;
 			}
 			else {
-				my $map_from = "http://" . $host_re . "/";
-				if ( $protocol == 0 ) {
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
-					$map_from = "https://" . $host_re . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-				}
-				elsif ( $protocol == 2 ) {
-
-					#add the first with http
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-
-					#add the second with https
-					my $map_from2 = "https://" . $host_re . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
+				if ( $ds_type =~ /^DNS/ ) {
+					$hname = "";
+				} else {
+					$re = "." . $host_re;
 				}
 			}
+			my $portstr = "";
+			if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
+				$portstr = ":" . $server->tcp_port;
+			}
+			my $map_from = "http://" . $hname . $re . $portstr . "/";
+			if ( $protocol == 0 ) {
+				$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+			}
+			elsif ( $protocol == 1 || $protocol == 3 ) {
+				$map_from = "https://" . $hname . $re . "/";
+				$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+			}
+			elsif ( $protocol == 2 ) {
+
+				#add the first one with http
+				$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+
+				#add the second one for https
+				my $map_from2 = "https://" . $hname . $re . "/";
+				$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
+			}
 		}
+
 		$dsinfo->{dslist}->[$j]->{"dscp"}                        = $dscp;
 		$dsinfo->{dslist}->[$j]->{"org"}                         = $org_server;
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;

@@ -163,6 +163,12 @@ sub view_by_hostname {
 
 		my $xml_id = $ds->xml_id;
 
+		# Maybe hostname is custom rfqdn
+		if ( !defined($ds_id) ) {
+			$ds_id = $self->db->resultset('Deliveryservice')
+				->search( { 'regex.pattern' => "$key" }, { join => { deliveryservice_regexes => { regex => undef } } } )->get_column('id')->single();
+		}
+
 		if ( !$version ) {
 			$version = 'latest';
 		}

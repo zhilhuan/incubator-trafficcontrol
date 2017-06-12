@@ -101,15 +101,18 @@ sub get_example_urls {
 	if ( $data->type->name =~ /^DNS/ ) {
 		foreach my $re ( @{$regexp_set} ) {
 			if ( $re->{type} eq 'HOST_REGEXP' ) {
-				my $host = $re->{pattern};
-				$host =~ s/\\//g;
-				$host =~ s/\.\*//g;
-				$host =~ s/\.//g;
+				my $rfqdn = $re->{pattern};
+				if ( $rfqdn =~ m/\.\*$/ ) {
+					$rfqdn =~ s/\\//g;
+					$rfqdn =~ s/\.\*//g;
+					$rfqdn =~ s/\.//g;
+					$rfqdn = 'edge.' . $rfqdn . "." . $cdn_domain;
+				}
 				if ( $re->{set_number} == 0 ) {
-					$url = $scheme . '://edge.' . $host . "." . $cdn_domain;
+					$url = $scheme . '://' . $rfqdn;
 					push( @example_urls, $url );
 					if ($scheme2) {
-						$url = $scheme2 . '://edge.' . $host . "." . $cdn_domain;
+						$url = $scheme2 . '://' . $rfqdn;
 						push( @example_urls, $url );
 					}
 				}
@@ -127,27 +130,29 @@ sub get_example_urls {
 	else { # TODO:  Is this necessary? Could this be consolidated?
 		foreach my $re ( @{$regexp_set} ) {
 			if ( $re->{type} eq 'HOST_REGEXP' ) {
-				my $host = $re->{pattern};
-				my $http_url;
-				my $https_url;
-				$host =~ s/\\//g;
-				$host =~ s/\.\*//g;
-				$host =~ s/\.//g;
+				my $rfqdn = $re->{pattern};
+				my $url;
+				if ( $rfqdn =~ m/\.\*$/ ) {
+					$rfqdn =~ s/\\//g;
+					$rfqdn =~ s/\.\*//g;
+					$rfqdn =~ s/\.//g;
+					$rfqdn = 'tr.' . $rfqdn . "." . $cdn_domain;
+				}
 
 				if ( $re->{set_number} == 0 ) {
-					$http_url =  $scheme . '://ccr.' . $host . "." . $cdn_domain;
-					push( @example_urls, $http_url );
+					$url = $scheme . '://' . $rfqdn;
+					push( @example_urls, $url );
 					if ($scheme2) {
-						$https_url = $scheme2 . '://ccr.' . $host . "." . $cdn_domain;
-						push( @example_urls, $https_url );
+						$url = $scheme2 . '://' . $rfqdn;
+						push( @example_urls, $url );
 					}
 				}
 				else {
-					 $http_url = $scheme . '://' . $re->{pattern};
-					 push( @example_urls, $http_url );
+					$url = $scheme . '://' . $re->{pattern} . $p;
+					push( @example_urls, $url );
 					if ($scheme2) {
-						$https_url = $scheme2 . '://' . $re->{pattern};
-						push( @example_urls, $https_url );
+						$url = $scheme2 . '://' . $re->{pattern} . $p;
+						push( @example_urls, $url );
 					}
 				}
 			}

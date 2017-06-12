@@ -94,8 +94,10 @@ sub get_hostname {
 	my $hostname = $2;
 	if ($data->type->name =~ m/^HTTP/) {
 		#remove routing name and replace with * for wildcard
+		my $offset = 0; #custom rfqdn
+		$offset = 1 if $hostname =~ /^tr\./;
 		my @split_hostname = split(/\./,$hostname);
-		$hostname = '*.' . join('.', splice(@split_hostname, 1));
+		$hostname = '*.' . join('.', splice(@split_hostname, $offset));
 	}
 	return $hostname;
 }

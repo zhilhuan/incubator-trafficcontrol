@@ -316,10 +316,16 @@ sub gen_crconfig_json {
                 );
                 if ( $set_number == 0 ) {
                     my $host = $pattern;
-                    $host =~ s/\\//g;
-                    $host =~ s/\.\*//g;
-                    $host =~ s/\.//g;
-                    push @domains, "$host.$ccr_domain_name";
+                    if ( $host =~ /\.\*$/ ) {
+                        $host =~ s/\\//g;
+                        $host =~ s/\.\*//g;
+                        $host =~ s/\.//g;
+                        push @domains, "$host.$ccr_domain_name";
+                        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'customRfqdn'} = 'false';
+                    } else {
+                        push @domains, $host;
+                        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'customRfqdn'} = 'true';
+                    }
                 }
             }
             elsif ( $type eq 'PATH_REGEXP' ) {
@@ -353,18 +359,19 @@ sub gen_crconfig_json {
 
                 foreach my $host ( @{ $ds_to_remap{ $row->xml_id } } ) {
                     my $remap;
+                    my $rfqdn;
                     if ( $host =~ m/\.\*$/ ) {
-                        my $host_copy = $host;
-                        $host_copy =~ s/$host_regex1//g;
-                        if ( $protocol eq 'DNS' ) {
-                            $remap = 'edge' . $host_copy . $ccr_domain_name;
-                        }
-                        else {
-                            $remap = $cache_tracker{$server} . $host_copy . $ccr_domain_name;
-                        }
+                        $rfqdn = $host;
+                        $rfqdn =~ s/$host_regex1//g;
+                        $rfqdn .= $ccr_domain_name;
+                    } else {
+                        $rfqdn = '.' . $host;
+                    }
+                    if ( $protocol eq 'DNS' ) {
+                        $remap = 'edge' . $rfqdn;
                     }
                     else {
-                        $remap = $host;
+                        $remap = $cache_tracker{$server} . $rfqdn;
                     }
                     push( @{ $data_obj->{'contentServers'}->{ $cache_tracker{$server} }->{'deliveryServices'}->{ $row->xml_id } }, $remap );
                 }
