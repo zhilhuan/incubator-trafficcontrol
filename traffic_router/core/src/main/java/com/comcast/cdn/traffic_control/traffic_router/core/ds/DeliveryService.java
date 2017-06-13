@@ -91,6 +91,7 @@ public class DeliveryService {
 	private final boolean acceptHttp;
 	private final boolean acceptHttps;
 	private final boolean redirectToHttps;
+	private final boolean customRfqdn;
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -142,6 +143,8 @@ public class DeliveryService {
 		acceptHttp = protocol != null ? protocol.optBoolean("acceptHttp", true) : true;
 		acceptHttps = protocol != null ? protocol.optBoolean("acceptHttps", false) : false;
 		redirectToHttps = protocol != null ? protocol.optBoolean("redirectToHttps", false) : false;
+
+		customRfqdn = dsJo.optBoolean("customRfqdn", false);
 	}
 
 	public String getId() {
@@ -615,5 +618,9 @@ public class DeliveryService {
 
 	public boolean isAcceptHttp() {
 		return acceptHttp;
+	}
+
+	public boolean isCustomRfqdn() {
+		return customRfqdn;
 	}
 }

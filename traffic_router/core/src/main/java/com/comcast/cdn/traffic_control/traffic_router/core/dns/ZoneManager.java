@@ -379,7 +379,7 @@ public class ZoneManager extends Resolver {
 		return records;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
 			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor, final String hostname) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
@@ -428,7 +428,7 @@ public class ZoneManager extends Resolver {
 						// prime the dynamic zone cache
 						if (primeDynCache && ds != null && ds.isDns()) {
 							final DNSRequest request = new DNSRequest();
-							final Name edgeName = newName(getDnsRoutingName(), domain);
+							final Name edgeName = ds.isCustomRfqdn() ? newName(domain) : newName(getDnsRoutingName(), domain);
 							request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
 
 							for (final CacheLocation cacheLocation : data.getCacheLocations()) {
@@ -541,14 +541,15 @@ public class ZoneManager extends Resolver {
 			}
 
 			if (ds != null && !ds.isDns()) {
-				addHttpRoutingRecords(list, domain, trJo, ttl, ip6RoutingEnabled);
+				addHttpRoutingRecords(list, domain, trJo, ttl, ip6RoutingEnabled, ds);
 			}
 		}
 	}
 
-	private static void addHttpRoutingRecords(final List<Record> list, final String domain, final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA) 
+	private static void addHttpRoutingRecords(final List<Record> list, final String domain, final JSONObject trJo, 
+			final JSONObject ttl, final boolean addTrafficRoutersAAAA, final DeliveryService ds) 
 					throws TextParseException, UnknownHostException {
-		final Name trName = newName(getHttpRoutingName(), domain);
+		final Name trName = ds.isCustomRfqdn() ? newName(domain) : newName(getHttpRoutingName(), domain);
 		list.add(new ARecord(trName,
 				DClass.IN,
 				ZoneUtils.getLong(ttl, "A", 60),
@@ -888,7 +889,7 @@ public class ZoneManager extends Resolver {
 
 		if (sr.isSuccessful()) {
 			return zone;
-		} else if (qname.toString().toLowerCase().matches(getDnsRoutingName() + "\\..*")) {
+		} else {
 			final Zone dynamicZone = createDynamicZone(zone, qname, qtype, clientAddress, isDnssecRequest, builder);
 
 			if (dynamicZone != null) {
