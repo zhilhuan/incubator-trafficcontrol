@@ -577,7 +577,7 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static Name getGlueName(final DeliveryService ds, final JSONObject trJo, final Name name, final String trName) throws TextParseException {
-		if (ds == null && trJo != null && trJo.has("fqdn") && trJo.optString("fqdn") != null) {
+		if ( ((ds == null) || ds.isCustomRfqdn()) && trJo != null && trJo.has("fqdn") && trJo.optString("fqdn") != null) {
 			return newName(trJo.optString("fqdn"));
 		} else {
 			final Name superDomain = new Name(new Name(name.toString(true)), 1);
@@ -585,7 +585,7 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static final Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
 			final Map<String, DeliveryService> dsMap, final CacheRegister data) throws IOException {
 		final Map<String, List<Record>> superDomains = new HashMap<String, List<Record>>();
@@ -610,7 +610,7 @@ public class ZoneManager extends Resolver {
 					zoneMap.put(domain, zholder);
 				}
 
-				final String superdomain = domain.split("\\.", 2)[1];
+				final String superdomain = ds.isCustomRfqdn() ? getTopLevelDomain().toString(true) : domain.split("\\.", 2)[1];
 
 				if (!superDomains.containsKey(superdomain)) {
 					superDomains.put(superdomain, new ArrayList<Record>());
