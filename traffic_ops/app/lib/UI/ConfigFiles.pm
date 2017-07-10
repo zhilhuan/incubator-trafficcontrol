@@ -1538,6 +1538,10 @@ sub ssl_multicert_dot_config {
 		$hostname =~ /(https?:\/\/)(.*)/;
 		my $new_host = $2;
 		my $key_name = "$new_host.key";
+		if ( !($data->type->name =~ /^DNS/) ) {
+			$key_name =~ s/tr\.//;
+			$key_name = '*.' . $key_name;
+		}
 		$new_host =~ tr/./_/;
 		my $cer_name = $new_host . "_cert.cer";
 
